@@ -1,0 +1,29 @@
+services:
+  nossocrm:
+    image: ${CRM_IMAGE:-nossocrm:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nossocrm-app
+    restart: unless-stopped
+    ports:
+      - "${CRM_PORT:-3000}:3000"
+    env_file:
+      - path: .env.docker
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

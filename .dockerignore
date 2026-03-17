@@ -1,0 +1,15 @@
+.git
+.github
+.next
+.specswarm
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+coverage
+test
+docs
+README.md
+AGENTS.md
+tsconfig.tsbuildinfo
