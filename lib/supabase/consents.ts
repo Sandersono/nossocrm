@@ -149,12 +149,11 @@ export const consentsService = {
       if (error) return { error };
 
       // Log revocation to audit
-      await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        action: 'REVOKE_AI_CONSENT',
-        resource_type: 'consent',
-        resource_id: user.id,
-        severity: 'info',
+      await supabase.rpc('log_audit_event', {
+        p_action: 'REVOKE_AI_CONSENT',
+        p_resource_type: 'consent',
+        p_resource_id: user.id,
+        p_severity: 'info',
       });
 
       return { error: null };
@@ -185,12 +184,11 @@ export const consentsService = {
       if (error) return { error };
 
       // Log full revocation to audit
-      await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        action: 'REVOKE_ALL_CONSENT',
-        resource_type: 'consent',
-        resource_id: user.id,
-        severity: 'warning',
+      await supabase.rpc('log_audit_event', {
+        p_action: 'REVOKE_ALL_CONSENT',
+        p_resource_type: 'consent',
+        p_resource_id: user.id,
+        p_severity: 'warning',
       });
 
       return { error: null };

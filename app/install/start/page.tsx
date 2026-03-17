@@ -138,20 +138,23 @@ export default function InstallStartPage() {
         const data = await res.json();
         if (!cancelled) setMeta(data);
 
-        // Se o instalador estiver desabilitado, tenta auto-unlock (experiência mágica)
-        if (!cancelled && data && data.enabled === false) {
+        // Em producao, nao reativamos o instalador automaticamente.
+        // O unlock exige token explicito do instalador e deve ser uma acao manual.
+        if (!cancelled && data && data.enabled === false && data.requiresToken === true) {
           const savedToken = localStorage.getItem(STORAGE_TOKEN);
           const savedProject = localStorage.getItem(STORAGE_PROJECT);
-          if (savedToken && savedProject) {
+          const savedInstallerToken = localStorage.getItem(STORAGE_INSTALLER_TOKEN);
+          if (savedToken && savedProject && savedInstallerToken) {
             try {
               const p = JSON.parse(savedProject) as { id: string; teamId?: string };
-              console.warn('[start] Installer disabled. Attempting auto-unlock...');
+              console.warn('[start] Installer disabled. Auto-unlock requires explicit installer token.');
               if (!cancelled) { setUnlockingInstaller(true); setUnlockError(null); }
               const unlockRes = await fetch('/api/installer/unlock', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                   vercel: { token: savedToken.trim(), projectId: p.id, teamId: p.teamId },
+                  installerToken: savedInstallerToken.trim(),
                 }),
               });
               const unlockData = await unlockRes.json().catch(() => null);

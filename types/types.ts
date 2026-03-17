@@ -6,7 +6,7 @@
  * 
  * @module types
  * 
- * Sistema SINGLE-TENANT (migrado em 2025-12-07)
+ * Sistema MULTI-TENANT com isolamento por organization_id
  * 
  * @example
  * ```tsx

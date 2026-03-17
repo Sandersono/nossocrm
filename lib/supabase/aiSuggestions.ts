@@ -18,17 +18,33 @@ export interface AISuggestionInteraction {
     created_at: string;
 }
 
+async function getAuthenticatedUserId() {
+    const sb = supabase;
+    if (!sb) return { userId: null as string | null, error: new Error('Supabase nÃ£o configurado') };
+
+    const { data } = await sb.auth.getUser();
+    if (!data.user) return { userId: null as string | null, error: new Error('Not authenticated') };
+
+    return { userId: data.user.id, error: null };
+}
+
 export const aiSuggestionsService = {
     /**
      * Get all interactions for the current user
      */
     async getAll() {
         const sb = supabase;
-        if (!sb) return { data: null as AISuggestionInteraction[] | null, error: new Error('Supabase não configurado') };
+        if (!sb) return { data: null as AISuggestionInteraction[] | null, error: new Error('Supabase nÃ£o configurado') };
+
+        const auth = await getAuthenticatedUserId();
+        if (auth.error || !auth.userId) {
+            return { data: null as AISuggestionInteraction[] | null, error: auth.error || new Error('Not authenticated') };
+        }
 
         const { data, error } = await sb
             .from('ai_suggestion_interactions')
             .select('*')
+            .eq('user_id', auth.userId)
             .order('created_at', { ascending: false });
 
         return { data: data as AISuggestionInteraction[] | null, error };
@@ -39,11 +55,17 @@ export const aiSuggestionsService = {
      */
     async getInteraction(suggestionType: SuggestionType, entityId: string) {
         const sb = supabase;
-        if (!sb) return { data: null as AISuggestionInteraction | null, error: new Error('Supabase não configurado') };
+        if (!sb) return { data: null as AISuggestionInteraction | null, error: new Error('Supabase nÃ£o configurado') };
+
+        const auth = await getAuthenticatedUserId();
+        if (auth.error || !auth.userId) {
+            return { data: null as AISuggestionInteraction | null, error: auth.error || new Error('Not authenticated') };
+        }
 
         const { data, error } = await sb
             .from('ai_suggestion_interactions')
             .select('*')
+            .eq('user_id', auth.userId)
             .eq('suggestion_type', suggestionType)
             .eq('entity_id', entityId)
             .maybeSingle();
@@ -62,15 +84,15 @@ export const aiSuggestionsService = {
         snoozedUntil?: Date
     ) {
         const sb = supabase;
-        if (!sb) throw new Error('Supabase não configurado');
+        if (!sb) throw new Error('Supabase nÃ£o configurado');
 
-        const { data: user } = await sb.auth.getUser();
-        if (!user.user) throw new Error('Not authenticated');
+        const auth = await getAuthenticatedUserId();
+        if (auth.error || !auth.userId) throw auth.error || new Error('Not authenticated');
 
         const { data, error } = await sb
             .from('ai_suggestion_interactions')
             .upsert({
-                user_id: user.user.id,
+                user_id: auth.userId,
                 suggestion_type: suggestionType,
                 entity_type: entityType,
                 entity_id: entityId,
@@ -91,18 +113,23 @@ export const aiSuggestionsService = {
      */
     async getHiddenSuggestionIds() {
         const sb = supabase;
-        if (!sb) return { data: new Set<string>(), error: new Error('Supabase não configurado') };
+        if (!sb) return { data: new Set<string>(), error: new Error('Supabase nÃ£o configurado') };
+
+        const auth = await getAuthenticatedUserId();
+        if (auth.error || !auth.userId) {
+            return { data: new Set<string>(), error: auth.error || new Error('Not authenticated') };
+        }
 
         const now = new Date().toISOString();
 
         const { data, error } = await sb
             .from('ai_suggestion_interactions')
             .select('suggestion_type, entity_id, action, snoozed_until')
+            .eq('user_id', auth.userId)
             .or(`action.neq.SNOOZED,snoozed_until.gt.${now}`);
 
         if (error || !data) return { data: new Set<string>(), error };
 
-        // Build a Set of "type-entityId" keys to quickly filter suggestions
         const hiddenIds = new Set(
             data
                 .filter(d => d.action !== 'SNOOZED' || (d.snoozed_until && new Date(d.snoozed_until) > new Date()))
@@ -117,11 +144,15 @@ export const aiSuggestionsService = {
      */
     async clearSnooze(suggestionType: SuggestionType, entityId: string) {
         const sb = supabase;
-        if (!sb) return { error: new Error('Supabase não configurado') };
+        if (!sb) return { error: new Error('Supabase nÃ£o configurado') };
+
+        const auth = await getAuthenticatedUserId();
+        if (auth.error || !auth.userId) return { error: auth.error || new Error('Not authenticated') };
 
         const { error } = await sb
             .from('ai_suggestion_interactions')
             .delete()
+            .eq('user_id', auth.userId)
             .eq('suggestion_type', suggestionType)
             .eq('entity_id', entityId)
             .eq('action', 'SNOOZED');

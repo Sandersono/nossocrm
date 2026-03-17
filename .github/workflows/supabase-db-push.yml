@@ -1,0 +1,36 @@
+name: Supabase DB Push
+
+on:
+  push:
+    branches:
+      - 2sdigital-main
+    paths:
+      - 'supabase/migrations/**'
+      - '.github/workflows/supabase-db-push.yml'
+  workflow_dispatch:
+
+jobs:
+  db-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Validate required secret
+        run: |
+          if [ -z "${SUPABASE_DB_URL}" ]; then
+            echo "SUPABASE_DB_URL secret is missing."
+            exit 1
+          fi
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Push migrations
+        run: supabase db push --db-url "${SUPABASE_DB_URL}"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
