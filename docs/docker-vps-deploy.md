@@ -59,9 +59,9 @@ Antes de deixar automatico, vale validar uma vez na mao:
 
 ```bash
 cp .env.docker.example .env.docker
-docker compose -f docker-compose.yml -f docker-compose.vps.yml build nossocrm
-docker compose -f docker-compose.yml -f docker-compose.vps.yml up -d nossocrm
-docker compose -f docker-compose.yml -f docker-compose.vps.yml logs -f nossocrm
+docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.vps.yml build nossocrm
+docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.vps.yml up -d nossocrm
+docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.vps.yml logs -f nossocrm
 ```
 
 ## Observacoes
@@ -70,3 +70,4 @@ docker compose -f docker-compose.yml -f docker-compose.vps.yml logs -f nossocrm
 - As migrations do Supabase continuam sendo aplicadas via workflow separado.
 - O cutover final da Vercel para a VPS deve acontecer so depois da homologacao.
 - Na VPS com Traefik, use sempre o override `docker-compose.vps.yml`.
+- As envs `NEXT_PUBLIC_*` precisam estar disponiveis tambem no build da imagem.
