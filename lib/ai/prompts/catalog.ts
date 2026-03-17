@@ -77,6 +77,25 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     notes: 'Variáveis: dealTitle, dealValue, stageLabel, probability.',
   },
   {
+    key: 'task_chatwoot_conversation_summary',
+    title: 'Chatwoot · Resumo executivo da conversa',
+    usedBy: ['app/api/integrations/chatwoot/process-summaries', 'lib/integrations/chatwoot/service'],
+    defaultTemplate:
+      `Voce esta resumindo uma conversa resolvida do Chatwoot para contexto comercial e operacional.\n` +
+      `Contato: {{contactName}}\n` +
+      `Deal: {{dealTitle}}\n` +
+      `Labels: {{labels}}\n` +
+      `Status: {{status}}\n` +
+      `Transcript:\n{{transcript}}\n` +
+      `Retorne JSON com:\n` +
+      `- summaryText: resumo executivo em portugues do Brasil (max 120 palavras)\n` +
+      `- keyTopics: array com 2 a 5 topicos curtos\n` +
+      `- customerIntent: texto curto\n` +
+      `- nextSteps: array com 1 a 5 proximos passos objetivos\n` +
+      `- sentiment: positive, neutral ou negative\n`,
+    notes: 'Variaveis: contactName, dealTitle, labels, status, transcript. Retorno estruturado para persistencia.',
+  },
+  {
     key: 'task_boards_generate_structure',
     title: 'Boards · Gerar estrutura de board (Kanban)',
     usedBy: ['app/api/ai/tasks/boards/generate-structure', 'app/api/ai/actions → generateBoardStructure'],

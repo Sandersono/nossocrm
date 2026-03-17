@@ -31,6 +31,13 @@ export const queryKeys = {
 
     companies: createQueryKeys('companies'),
     boards: createQueryKeys('boards'),
+    chatwoot: createExtendedQueryKeys('chatwoot', base => ({
+        integration: () => [...base.all, 'integration'] as const,
+        mappings: () => [...base.all, 'mappings'] as const,
+        events: (limit = 50) => [...base.all, 'events', limit] as const,
+        history: (filters: { contactId?: string; dealId?: string; limit?: number }) =>
+            [...base.all, 'history', filters] as const,
+    })),
 
     // Activities with custom extension for byDeal
     activities: createExtendedQueryKeys('activities', base => ({

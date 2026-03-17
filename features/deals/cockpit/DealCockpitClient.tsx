@@ -29,6 +29,7 @@ import { useAIDealAnalysis, deriveHealthFromProbability } from '@/features/inbox
 import { useDealNotes } from '@/features/inbox/hooks/useDealNotes';
 import { useDealFiles } from '@/features/inbox/hooks/useDealFiles';
 import { useQuickScripts } from '@/features/inbox/hooks/useQuickScripts';
+import { ChatwootHistoryList } from '@/components/integrations/ChatwootHistoryList';
 
 import { UIChat } from '@/components/ai/UIChat';
 import { CallModal, type CallLogData } from '@/features/inbox/components/CallModal';
@@ -36,7 +37,7 @@ import { MessageComposerModal, type MessageChannel, type MessageExecutedEvent } 
 import { ScheduleModal, type ScheduleData, type ScheduleType } from '@/features/inbox/components/ScheduleModal';
 
 import type { QuickScript, ScriptCategory } from '@/lib/supabase/quickScripts';
-import type { Activity, Board, BoardStage, Contact, DealView } from '@/types';
+import type { Activity, Board, BoardStage, ChatwootConversationHistoryItem, Contact, DealView } from '@/types';
 
 type Tab = 'chat' | 'notas' | 'scripts' | 'arquivos';
 
@@ -640,6 +641,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>(defaultChecklist);
   const [checklistDraft, setChecklistDraft] = useState('');
+  const [chatwootHistory, setChatwootHistory] = useState<ChatwootConversationHistoryItem[]>([]);
+  const [chatwootHistoryLoading, setChatwootHistoryLoading] = useState(false);
+  const [chatwootHistoryError, setChatwootHistoryError] = useState<string | null>(null);
 
   const actor = useMemo(() => {
     const name =
@@ -696,6 +700,45 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     if (!selectedDeal) return null;
     return boardsById.get(selectedDeal.boardId) ?? null;
   }, [boardsById, selectedDeal]);
+
+  useEffect(() => {
+    if (!selectedDeal?.id) {
+      setChatwootHistory([]);
+      setChatwootHistoryError(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadChatwootHistory = async () => {
+      setChatwootHistoryLoading(true);
+      setChatwootHistoryError(null);
+      try {
+        const response = await fetch(`/api/integrations/chatwoot/history?dealId=${encodeURIComponent(selectedDeal.id)}&limit=6`, {
+          credentials: 'include',
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body?.error || 'Falha ao carregar historico do Chatwoot');
+        }
+        if (!cancelled) {
+          setChatwootHistory(Array.isArray(body.history) ? body.history : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setChatwootHistoryError(error instanceof Error ? error.message : 'Falha ao carregar historico do Chatwoot');
+        }
+      } finally {
+        if (!cancelled) {
+          setChatwootHistoryLoading(false);
+        }
+      }
+    };
+
+    void loadChatwootHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDeal?.id]);
 
   const templateVariables = useMemo(() => {
     const nome = selectedContact?.name?.split(' ')[0]?.trim() || 'Cliente';
@@ -1841,6 +1884,42 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                   </div>
                 </div>
               </div>
+            </Panel>
+
+            <Panel
+              title="Chatwoot"
+              icon={<MessageCircle className="h-4 w-4 text-cyan-200" />}
+              className="flex min-h-0 flex-col"
+              bodyClassName="min-h-0"
+            >
+              <ChatwootHistoryList
+                history={chatwootHistory}
+                loading={chatwootHistoryLoading}
+                error={chatwootHistoryError}
+                variant="dark"
+                emptyMessage="Este deal ainda nao recebeu snapshot resolvido do Chatwoot."
+                onRefresh={() => {
+                  if (!selectedDeal?.id) return;
+                  setChatwootHistoryLoading(true);
+                  setChatwootHistoryError(null);
+                  fetch(`/api/integrations/chatwoot/history?dealId=${encodeURIComponent(selectedDeal.id)}&limit=6`, {
+                    credentials: 'include',
+                  })
+                    .then(async (response) => {
+                      const body = await response.json().catch(() => ({}));
+                      if (!response.ok) {
+                        throw new Error(body?.error || 'Falha ao carregar historico do Chatwoot');
+                      }
+                      setChatwootHistory(Array.isArray(body.history) ? body.history : []);
+                    })
+                    .catch((error) => {
+                      setChatwootHistoryError(error instanceof Error ? error.message : 'Falha ao carregar historico do Chatwoot');
+                    })
+                    .finally(() => {
+                      setChatwootHistoryLoading(false);
+                    });
+                }}
+              />
             </Panel>
           </div>
 

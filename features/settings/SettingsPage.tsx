@@ -4,6 +4,9 @@ import { useSettingsController } from './hooks/useSettingsController';
 import { TagsManager } from './components/TagsManager';
 import { CustomFieldsManager } from './components/CustomFieldsManager';
 import { ApiKeysSection } from './components/ApiKeysSection';
+import { ChatwootEventsSection } from './components/ChatwootEventsSection';
+import { ChatwootIntegrationSection } from './components/ChatwootIntegrationSection';
+import { ChatwootLabelMappingsSection } from './components/ChatwootLabelMappingsSection';
 import { WebhooksSection } from './components/WebhooksSection';
 import { McpSection } from './components/McpSection';
 import { DataStorageSettings } from './components/DataStorageSettings';
@@ -104,13 +107,13 @@ const ProductsSettings: React.FC = () => {
 };
 
 const IntegrationsSettings: React.FC = () => {
-  type IntegrationsSubTab = 'api' | 'webhooks' | 'mcp';
-  const [subTab, setSubTab] = useState<IntegrationsSubTab>('api');
+  type IntegrationsSubTab = 'chatwoot' | 'api' | 'webhooks' | 'mcp';
+  const [subTab, setSubTab] = useState<IntegrationsSubTab>('chatwoot');
 
   useEffect(() => {
     const syncFromHash = () => {
     const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
-    if (h === 'webhooks' || h === 'api' || h === 'mcp') setSubTab(h as IntegrationsSubTab);
+    if (h === 'chatwoot' || h === 'webhooks' || h === 'api' || h === 'mcp') setSubTab(h as IntegrationsSubTab);
     };
 
     syncFromHash();
@@ -134,6 +137,7 @@ const IntegrationsSettings: React.FC = () => {
     <div className="pb-10">
       <div className="flex items-center gap-2 mb-6">
         {([
+          { id: 'chatwoot' as const, label: 'Chatwoot' },
           { id: 'webhooks' as const, label: 'Webhooks' },
           { id: 'api' as const, label: 'API' },
           { id: 'mcp' as const, label: 'MCP' },
@@ -156,6 +160,13 @@ const IntegrationsSettings: React.FC = () => {
         })}
       </div>
 
+      {subTab === 'chatwoot' && (
+        <>
+          <ChatwootIntegrationSection />
+          <ChatwootLabelMappingsSection />
+          <ChatwootEventsSection />
+        </>
+      )}
       {subTab === 'api' && <ApiKeysSection />}
       {subTab === 'webhooks' && <WebhooksSection />}
       {subTab === 'mcp' && <McpSection />}
