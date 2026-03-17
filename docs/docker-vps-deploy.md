@@ -9,6 +9,7 @@ Rodar o NossoCRM na VPS da 2SDigital em Docker, mantendo o Supabase na cloud.
 - `Dockerfile`
 - `.dockerignore`
 - `docker-compose.yml`
+- `docker-compose.vps.yml`
 - `.env.docker.example`
 - `.github/workflows/docker-vps-deploy.yml`
 
@@ -39,7 +40,7 @@ Rodar o NossoCRM na VPS da 2SDigital em Docker, mantendo o Supabase na cloud.
 
 1. Instalar Docker e Docker Compose plugin.
 2. Criar diretorio de deploy do CRM.
-3. Colocar `docker-compose.yml` e `.env.docker` nesse diretorio.
+3. Colocar `docker-compose.yml`, `docker-compose.vps.yml` e `.env.docker` nesse diretorio.
 4. Ajustar proxy reverso para apontar para a porta publicada do CRM.
 
 ## Preparacao do `.env.docker`
@@ -49,6 +50,8 @@ Rodar o NossoCRM na VPS da 2SDigital em Docker, mantendo o Supabase na cloud.
 3. Definir `INSTALLER_ENABLED=false`.
 4. Definir `INSTALLER_TOKEN`.
 5. Definir `INTEGRATIONS_ENCRYPTION_KEY` se Chatwoot estiver ativo.
+6. Definir `APP_DOMAIN` com o dominio do CRM na VPS.
+7. Opcionalmente ajustar `TRAEFIK_ROUTER_NAME`.
 
 ## Primeiro deploy manual
 
@@ -56,9 +59,9 @@ Antes de deixar automatico, vale validar uma vez na mao:
 
 ```bash
 cp .env.docker.example .env.docker
-docker compose build nossocrm
-docker compose up -d nossocrm
-docker compose logs -f nossocrm
+docker compose -f docker-compose.yml -f docker-compose.vps.yml build nossocrm
+docker compose -f docker-compose.yml -f docker-compose.vps.yml up -d nossocrm
+docker compose -f docker-compose.yml -f docker-compose.vps.yml logs -f nossocrm
 ```
 
 ## Observacoes
@@ -66,3 +69,4 @@ docker compose logs -f nossocrm
 - O banco continua fora do container da app.
 - As migrations do Supabase continuam sendo aplicadas via workflow separado.
 - O cutover final da Vercel para a VPS deve acontecer so depois da homologacao.
+- Na VPS com Traefik, use sempre o override `docker-compose.vps.yml`.

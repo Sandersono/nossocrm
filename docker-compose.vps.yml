@@ -1,0 +1,17 @@
+services:
+  nossocrm:
+    ports: []
+    networks:
+      - default
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=edge
+      - traefik.http.routers.${TRAEFIK_ROUTER_NAME:-nossocrm}.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.${TRAEFIK_ROUTER_NAME:-nossocrm}.entrypoints=websecure
+      - traefik.http.routers.${TRAEFIK_ROUTER_NAME:-nossocrm}.tls.certresolver=le
+      - traefik.http.services.${TRAEFIK_ROUTER_NAME:-nossocrm}.loadbalancer.server.port=3000
+
+networks:
+  edge:
+    external: true
