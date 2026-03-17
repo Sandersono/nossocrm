@@ -1,6 +1,6 @@
 services:
   nossocrm:
-    ports: []
+    ports: !reset []
     networks:
       - default
       - edge
