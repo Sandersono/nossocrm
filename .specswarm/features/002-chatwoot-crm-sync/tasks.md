@@ -83,6 +83,7 @@
 - [x] T038 [P] Document admin setup and operational troubleshooting in docs/chatwoot-integration.md
 - [x] T039 Validate lint, typecheck, targeted tests, and cache safety using package.json, eslint.config.mjs, tsconfig.json, and lib/query/queryKeys.ts
 - [ ] T040 Run end-to-end manual scenarios from .specswarm/features/002-chatwoot-crm-sync/quickstart.md and capture follow-up fixes
+- [ ] T041 Validate Chatwoot settings empty-state UX without configured integration and remove residual error toasts if they still appear
 
 ## Dependencies
 
