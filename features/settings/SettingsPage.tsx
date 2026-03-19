@@ -11,13 +11,14 @@ import { WebhooksSection } from './components/WebhooksSection';
 import { McpSection } from './components/McpSection';
 import { DataStorageSettings } from './components/DataStorageSettings';
 import { ProductsCatalogManager } from './components/ProductsCatalogManager';
+import { PlatformOrganizationsSection } from './components/PlatformOrganizationsSection';
 import { AICenterSettings } from './AICenterSettings';
-
 import { UsersPage } from './UsersPage';
 import { useAuth } from '@/context/AuthContext';
-import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package } from 'lucide-react';
+import { isAdminRole, isSuperAdminRole } from '@/lib/auth/roles';
+import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2 } from 'lucide-react';
 
-type SettingsTab = 'general' | 'products' | 'integrations' | 'ai' | 'data' | 'users';
+type SettingsTab = 'general' | 'products' | 'integrations' | 'ai' | 'data' | 'users' | 'platform';
 
 interface GeneralSettingsProps {
   hash?: string;
@@ -27,10 +28,9 @@ interface GeneralSettingsProps {
 const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
   const controller = useSettingsController();
 
-  // Scroll to hash element (e.g., #ai-config)
   useEffect(() => {
     if (hash) {
-      const elementId = hash.slice(1); // Remove #
+      const elementId = hash.slice(1);
       setTimeout(() => {
         const element = document.getElementById(elementId);
         if (element) {
@@ -40,18 +40,16 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
     }
   }, [hash]);
 
-
   return (
     <div className="pb-10">
-      {/* General Settings */}
       <div className="mb-12">
         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Página Inicial</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Pagina Inicial</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Escolha qual tela deve abrir quando você iniciar o CRM.
+            Escolha qual tela deve abrir quando voce iniciar o CRM.
           </p>
           <select
-            aria-label="Selecionar página inicial"
+            aria-label="Selecionar pagina inicial"
             value={controller.defaultRoute}
             onChange={(e) => controller.setDefaultRoute(e.target.value)}
             className="w-full max-w-xs px-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-slate-900 dark:text-white transition-all"
@@ -62,7 +60,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
             <option value="/boards">Boards (Kanban)</option>
             <option value="/contacts">Contatos</option>
             <option value="/activities">Atividades</option>
-            <option value="/reports">Relatórios</option>
+            <option value="/reports">Relatorios</option>
           </select>
         </div>
       </div>
@@ -93,7 +91,6 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
           />
         </>
       )}
-
     </div>
   );
 };
@@ -112,8 +109,10 @@ const IntegrationsSettings: React.FC = () => {
 
   useEffect(() => {
     const syncFromHash = () => {
-    const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
-    if (h === 'chatwoot' || h === 'webhooks' || h === 'api' || h === 'mcp') setSubTab(h as IntegrationsSubTab);
+      const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
+      if (h === 'chatwoot' || h === 'webhooks' || h === 'api' || h === 'mcp') {
+        setSubTab(h as IntegrationsSubTab);
+      }
     };
 
     syncFromHash();
@@ -174,25 +173,27 @@ const IntegrationsSettings: React.FC = () => {
   );
 };
 
+const PlatformSettings: React.FC = () => {
+  return (
+    <div className="pb-10">
+      <PlatformOrganizationsSection />
+    </div>
+  );
+};
+
 interface SettingsPageProps {
   tab?: SettingsTab;
 }
 
-/**
- * Componente React `SettingsPage`.
- *
- * @param {SettingsPageProps} { tab: initialTab } - Parâmetro `{ tab: initialTab }`.
- * @returns {Element} Retorna um valor do tipo `Element`.
- */
 const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
   const { profile } = useAuth();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab || 'general');
+  const isAdmin = isAdminRole(profile?.role);
+  const isSuperAdmin = isSuperAdminRole(profile?.role);
 
-  // Get hash from URL for scrolling
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
 
-  // Determine tab from pathname if available
   useEffect(() => {
     if (pathname?.includes('/settings/ai')) {
       setActiveTab('ai');
@@ -204,6 +205,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
       setActiveTab('data');
     } else if (pathname?.includes('/settings/users')) {
       setActiveTab('users');
+    } else if (pathname?.includes('/settings/platform')) {
+      setActiveTab('platform');
     } else {
       setActiveTab('general');
     }
@@ -211,11 +214,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
 
   const tabs = [
     { id: 'general' as SettingsTab, name: 'Geral', icon: SettingsIcon },
-    ...(profile?.role === 'admin' ? [{ id: 'products' as SettingsTab, name: 'Produtos/Serviços', icon: Package }] : []),
-    ...(profile?.role === 'admin' ? [{ id: 'integrations' as SettingsTab, name: 'Integrações', icon: Plug }] : []),
+    ...(isAdmin ? [{ id: 'products' as SettingsTab, name: 'Produtos/Servicos', icon: Package }] : []),
+    ...(isAdmin ? [{ id: 'integrations' as SettingsTab, name: 'Integracoes', icon: Plug }] : []),
     { id: 'ai' as SettingsTab, name: 'Central de I.A', icon: Sparkles },
     { id: 'data' as SettingsTab, name: 'Dados', icon: Database },
-    ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipe', icon: Users }] : []),
+    ...(isAdmin ? [{ id: 'users' as SettingsTab, name: 'Equipe', icon: Users }] : []),
+    ...(isSuperAdmin ? [{ id: 'platform' as SettingsTab, name: 'Plataforma', icon: Building2 }] : []),
   ];
 
   const renderContent = () => {
@@ -230,14 +234,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
         return <DataStorageSettings />;
       case 'users':
         return <UsersPage />;
+      case 'platform':
+        return <PlatformSettings />;
       default:
-        return <GeneralSettings hash={hash} isAdmin={profile?.role === 'admin'} />;
+        return <GeneralSettings hash={hash} isAdmin={isAdmin} />;
     }
   };
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Tabs minimalistas */}
       <div className="flex items-center gap-1 mb-8 border-b border-slate-200 dark:border-white/10">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -245,10 +250,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${isActive
-                ? 'text-primary-600 dark:text-primary-400'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
+              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'text-primary-600 dark:text-primary-400'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
             >
               <tab.icon className="h-4 w-4" />
               {tab.name}
@@ -260,11 +266,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
         })}
       </div>
 
-      {/* Content */}
       {renderContent()}
     </div>
   );
 };
 
 export default SettingsPage;
-

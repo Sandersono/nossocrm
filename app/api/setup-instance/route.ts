@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     password,
     email_confirm: true,
     user_metadata: {
-      role: 'admin',
+      role: 'superadmin',
       organization_id: organization.id,
     },
   });
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       name: displayName,
       first_name: displayName,
       organization_id: organization.id,
-      role: 'admin',
+      role: 'superadmin',
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'id' }

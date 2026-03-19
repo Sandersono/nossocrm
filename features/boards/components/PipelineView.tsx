@@ -13,6 +13,7 @@ import { DealView, CustomFieldDefinition, Board, BoardStage } from '@/types';
 import { ExportTemplateModal } from './Modals/ExportTemplateModal';
 import { useAuth } from '@/context/AuthContext';
 import PageLoader from '@/components/PageLoader';
+import { isAdminRole } from '@/lib/auth/roles';
 
 interface PipelineViewProps {
   // Boards
@@ -244,7 +245,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   boardCreateOverlay,
 }) => {
   const { profile } = useAuth();
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = isAdminRole(profile?.role);
   const [isExportModalOpen, setIsExportModalOpen] = React.useState(false);
 
   const handleUpdateStage = (updatedStage: BoardStage) => {

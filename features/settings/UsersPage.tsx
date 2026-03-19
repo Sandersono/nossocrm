@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getRoleLabel, isAdminRole, isSuperAdminRole } from '@/lib/auth/roles';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -254,7 +255,7 @@ export const UsersPage: React.FC = () => {
         );
     }
 
-    if (currentUserProfile?.role !== 'admin') {
+    if (!isAdminRole(currentUserProfile?.role)) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="text-center">
@@ -270,7 +271,7 @@ export const UsersPage: React.FC = () => {
         );
     }
 
-    const admins = users.filter(u => u.role === 'admin');
+    const admins = users.filter(u => isAdminRole(u.role));
     const vendedores = users.filter(u => u.role === 'vendedor');
 
     return (
@@ -314,7 +315,7 @@ export const UsersPage: React.FC = () => {
                                 {/* Avatar */}
                                 <div className={`relative flex-shrink-0 h-14 w-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
                                     {initials}
-                                    {user.role === 'admin' && (
+                                    {isAdminRole(user.role) && (
                                         <div className="absolute -top-1 -right-1 h-5 w-5 bg-amber-400 rounded-full flex items-center justify-center shadow-md ring-2 ring-white dark:ring-slate-900">
                                             <Crown className="h-3 w-3 text-amber-900" />
                                         </div>
@@ -340,14 +341,16 @@ export const UsersPage: React.FC = () => {
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3 mt-1.5">
-                                        <span className={`inline-flex items-center gap-1.5 text-sm ${user.role === 'admin'
-                                            ? 'text-amber-600 dark:text-amber-400'
-                                            : 'text-slate-500 dark:text-slate-400'
+                                        <span className={`inline-flex items-center gap-1.5 text-sm ${isSuperAdminRole(user.role)
+                                            ? 'text-fuchsia-600 dark:text-fuchsia-400'
+                                            : isAdminRole(user.role)
+                                                ? 'text-amber-600 dark:text-amber-400'
+                                                : 'text-slate-500 dark:text-slate-400'
                                             }`}>
-                                            {user.role === 'admin' ? (
+                                            {isAdminRole(user.role) ? (
                                                 <>
                                                     <Crown className="h-3.5 w-3.5" />
-                                                    Administrador
+                                                    {getRoleLabel(user.role)}
                                                 </>
                                             ) : (
                                                 <>
@@ -460,7 +463,7 @@ export const UsersPage: React.FC = () => {
                                                             ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
                                                             : 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
                                                             }`}>
-                                                            {invite.role}
+                                                            {getRoleLabel(invite.role)}
                                                         </span>
                                                         <span className="text-xs text-slate-400">
                                                             {invite.expires_at

@@ -31,6 +31,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { OrganizationId } from '../types';
+import type { UserRole } from '@/lib/auth/roles';
 
 /**
  * Perfil do usuário no sistema
@@ -51,7 +52,7 @@ interface Profile {
     id: string;
     email: string;
     organization_id: OrganizationId;
-    role: 'admin' | 'vendedor';
+    role: UserRole;
     first_name?: string | null;
     last_name?: string | null;
     nickname?: string | null;

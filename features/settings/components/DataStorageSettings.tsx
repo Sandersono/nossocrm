@@ -8,6 +8,7 @@ import { useCRM } from '@/context/CRMContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/lib/supabase';
+import { isAdminRole } from '@/lib/auth/roles';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 
@@ -27,7 +28,7 @@ export const DataStorageSettings: React.FC = () => {
     const [confirmText, setConfirmText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = isAdminRole(profile?.role);
 
     // Estatísticas
     const stats = {

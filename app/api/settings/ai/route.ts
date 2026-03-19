@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { AI_DEFAULT_MODELS } from '@/lib/ai/defaults';
+import { isAdminRole } from '@/lib/auth/roles';
 
 function json<T>(body: T, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -63,7 +64,7 @@ export async function GET() {
   const aiEnabled = typeof orgSettings?.ai_enabled === 'boolean' ? orgSettings.ai_enabled : true;
 
   // Security: members should NOT receive raw API keys.
-  if (profile.role !== 'admin') {
+  if (!isAdminRole(profile.role)) {
     return json({
       aiEnabled,
       aiProvider: (orgSettings?.ai_provider || 'google') as Provider,
@@ -122,7 +123,7 @@ export async function POST(req: Request) {
     return json({ error: 'Profile not found' }, 404);
   }
 
-  if (profile.role !== 'admin') {
+  if (!isAdminRole(profile.role)) {
     return json({ error: 'Forbidden' }, 403);
   }
 

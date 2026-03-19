@@ -89,12 +89,10 @@ export async function updateSession(request: NextRequest) {
     // Protected routes - redirect to login if not authenticated
     const isAuthRoute =
         pathname.startsWith('/login') ||
-        pathname.startsWith('/auth') ||
-        pathname.startsWith('/register')
+        pathname.startsWith('/auth')
     const isPublicRoute =
         pathname === '/' ||
         pathname.startsWith('/join') ||
-        pathname.startsWith('/register') ||
         isSetupRoute ||
         isInstallRoute
 

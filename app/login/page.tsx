@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getErrorMessage } from '@/lib/utils/errorUtils'
@@ -140,10 +139,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                    Primeira vez aqui?{' '}
-                    <Link href="/register" className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
-                        Criar organizacao
-                    </Link>
+                    Precisa de acesso? Fale com o administrador da plataforma para criar seu workspace.
                 </p>
 
                 <p className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">

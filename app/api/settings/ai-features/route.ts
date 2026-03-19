@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { isAdminRole } from '@/lib/auth/roles';
 
 function json<T>(body: T, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -40,7 +41,7 @@ export async function GET() {
   for (const row of data || []) flags[row.key] = Boolean(row.enabled);
 
   return json({
-    isAdmin: me.role === 'admin',
+    isAdmin: isAdminRole(me.role),
     flags,
   });
 }
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
     .single();
 
   if (meError || !me?.organization_id) return json({ error: 'Profile not found' }, 404);
-  if (me.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(me.role)) return json({ error: 'Forbidden' }, 403);
 
   const rawBody = await req.json().catch(() => null);
   const parsed = UpdateFeatureSchema.safeParse(rawBody);

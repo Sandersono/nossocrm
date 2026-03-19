@@ -7,6 +7,7 @@ import { useBoards } from '@/context/boards/BoardsContext';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { isAdminRole } from '@/lib/auth/roles';
 import { cn } from '@/lib/utils/cn';
 
 type InboundSourceRow = {
@@ -107,7 +108,7 @@ export const WebhooksSection: React.FC = () => {
   const [confirmDeleteInboundOpen, setConfirmDeleteInboundOpen] = useState(false);
   const [confirmDeleteOutboundOpen, setConfirmDeleteOutboundOpen] = useState(false);
 
-  const canUse = profile?.role === 'admin' && !!profile?.organization_id;
+  const canUse = isAdminRole(profile?.role) && !!profile?.organization_id;
 
   const activeInbound = useMemo(() => sources.find((s) => s.active) || sources[0] || null, [sources]);
   const hasInbound = !!activeInbound && !!activeInbound.active;

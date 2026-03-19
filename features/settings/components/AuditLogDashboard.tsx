@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { isAdminRole } from '@/lib/auth/roles';
 
 // Performance: reuse Intl formatter to avoid allocating options objects for every log row.
 const PT_BR_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
@@ -143,7 +144,7 @@ export const AuditLogDashboard: React.FC = () => {
     info: 0,
   });
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = isAdminRole(profile?.role);
 
   const fetchLogs = async () => {
     if (!isAdmin) return;

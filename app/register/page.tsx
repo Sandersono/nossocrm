@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
-import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isSuperAdminRole } from '@/lib/auth/roles'
 import { getErrorMessage } from '@/lib/utils/errorUtils'
 import { ArrowRight, Building2, Loader2, Lock, Mail, User } from 'lucide-react'
 
@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
+  const [currentRole, setCurrentRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,6 +29,68 @@ export default function RegisterPage() {
   }
   const isPasswordValid = Object.values(passwordRequirements).every(Boolean)
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0
+
+  useEffect(() => {
+    let active = true
+
+    const loadRole = async () => {
+      if (!supabase) {
+        if (active) setAuthLoading(false)
+        return
+      }
+
+      const { data: authData } = await supabase.auth.getUser()
+      const userId = authData.user?.id
+
+      if (!userId) {
+        if (active) {
+          setCurrentRole(null)
+          setAuthLoading(false)
+        }
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (active) {
+        setCurrentRole(profile?.role || null)
+        setAuthLoading(false)
+      }
+    }
+
+    void loadRole()
+
+    return () => {
+      active = false
+    }
+  }, [supabase])
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
+      </div>
+    )
+  }
+
+  if (!isSuperAdminRole(currentRole)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg px-4">
+        <div className="max-w-lg w-full bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-8 text-center">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight mb-2">
+            Acesso restrito
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            A criação de novos tenants agora fica disponível apenas para perfis com papel <strong>superadmin</strong>.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,13 +123,7 @@ export default function RegisterPage() {
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || `Erro no cadastro (HTTP ${res.status})`)
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInError) throw signInError
-      router.push('/dashboard')
+      router.push('/settings/platform')
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -83,10 +141,10 @@ export default function RegisterPage() {
       <div className="max-w-md w-full relative z-10 px-4">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-display tracking-tight mb-2">
-            Criar organizacao
+            Criar workspace
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Abra um workspace proprio para sua empresa.
+            Abra um novo tenant da plataforma e entregue o acesso inicial ao cliente.
           </p>
         </div>
 
@@ -247,13 +305,6 @@ export default function RegisterPage() {
             </button>
           </form>
         </div>
-
-        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-          Ja tem acesso?{' '}
-          <Link href="/login" className="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400 dark:hover:text-cyan-300">
-            Entrar
-          </Link>
-        </p>
       </div>
     </div>
   )

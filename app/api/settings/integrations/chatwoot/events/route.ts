@@ -1,5 +1,6 @@
 import { requireOrganizationUser } from '@/lib/integrations/chatwoot/auth';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { isAdminRole } from '@/lib/auth/roles';
 import { listChatwootEventLogs, replayChatwootEvent } from '@/lib/integrations/chatwoot/service';
 
 function json(body: unknown, status = 200) {
@@ -12,7 +13,7 @@ function json(body: unknown, status = 200) {
 export async function GET(request: Request) {
   const auth = await requireOrganizationUser();
   if (!auth.ok) return json(auth.body, auth.status);
-  if (auth.profile.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(auth.profile.role)) return json({ error: 'Forbidden' }, 403);
 
   const url = new URL(request.url);
   const limit = Number(url.searchParams.get('limit') || '50');
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
 
   const auth = await requireOrganizationUser();
   if (!auth.ok) return json(auth.body, auth.status);
-  if (auth.profile.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(auth.profile.role)) return json({ error: 'Forbidden' }, 403);
 
   const raw = await req.json().catch(() => null);
   const eventLogId = typeof raw?.eventLogId === 'string' ? raw.eventLogId.trim() : '';

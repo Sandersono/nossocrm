@@ -1,4 +1,5 @@
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { isAdminRole } from '@/lib/auth/roles';
 import { requireOrganizationUser } from '@/lib/integrations/chatwoot/auth';
 import { ChatwootIntegrationUpsertSchema } from '@/lib/integrations/chatwoot/schemas';
 import { getChatwootIntegrationForOrg, upsertChatwootIntegration } from '@/lib/integrations/chatwoot/service';
@@ -13,7 +14,7 @@ function json(body: unknown, status = 200) {
 export async function GET() {
   const auth = await requireOrganizationUser();
   if (!auth.ok) return json(auth.body, auth.status);
-  if (auth.profile.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(auth.profile.role)) return json({ error: 'Forbidden' }, 403);
 
   const integration = await getChatwootIntegrationForOrg(auth.profile.organizationId);
   return json({ integration });
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
 
   const auth = await requireOrganizationUser();
   if (!auth.ok) return json(auth.body, auth.status);
-  if (auth.profile.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(auth.profile.role)) return json({ error: 'Forbidden' }, 403);
 
   const raw = await req.json().catch(() => null);
   const parsed = ChatwootIntegrationUpsertSchema.safeParse(raw);

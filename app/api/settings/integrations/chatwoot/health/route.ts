@@ -1,6 +1,7 @@
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { requireOrganizationUser } from '@/lib/integrations/chatwoot/auth';
 import { healthcheckChatwootIntegration } from '@/lib/integrations/chatwoot/service';
+import { isAdminRole } from '@/lib/auth/roles';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
 
   const auth = await requireOrganizationUser();
   if (!auth.ok) return json(auth.body, auth.status);
-  if (auth.profile.role !== 'admin') return json({ error: 'Forbidden' }, 403);
+  if (!isAdminRole(auth.profile.role)) return json({ error: 'Forbidden' }, 403);
 
   try {
     const result = await healthcheckChatwootIntegration(auth.profile.organizationId);

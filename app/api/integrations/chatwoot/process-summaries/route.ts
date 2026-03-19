@@ -10,6 +10,7 @@ import {
   listPendingChatwootSummaries,
   markChatwootSummaryProcessing,
 } from '@/lib/integrations/chatwoot/service';
+import { isAdminRole } from '@/lib/auth/roles';
 
 export const maxDuration = 60;
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     if (profileError || !profile) {
       return json({ error: 'Profile not found' }, 404);
     }
-    if (profile.role !== 'admin') {
+    if (!isAdminRole(profile.role)) {
       return json({ error: 'Forbidden' }, 403);
     }
 

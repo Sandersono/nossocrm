@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { createStaticAdminClient } from '@/lib/supabase/server';
+import { createClient, createStaticAdminClient } from '@/lib/supabase/server';
+import { isSuperAdminRole } from '@/lib/auth/roles';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
 function json<T>(body: T, status = 200): Response {
@@ -36,6 +37,22 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return json({ error: 'Invalid payload', details: parsed.error.flatten() }, 400);
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  const { data: operator, error: operatorError } = await supabase
+    .from('profiles')
+    .select('id, role, organization_id')
+    .eq('id', user.id)
+    .single();
+
+  if (operatorError || !operator?.organization_id) return json({ error: 'Profile not found' }, 404);
+  if (!isSuperAdminRole(operator.role)) return json({ error: 'Forbidden' }, 403);
 
   const { companyName, name, email, password } = parsed.data;
   const admin = createStaticAdminClient();
