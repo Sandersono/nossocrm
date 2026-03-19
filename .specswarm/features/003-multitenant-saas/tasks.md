@@ -25,3 +25,8 @@
 - [x] T012 Run `npm run lint`
 - [x] T013 Run `npm run build`
 - [ ] T014 Validate the Vercel-ready flow manually after deploy
+
+## Backlog
+
+- [ ] T015 Add central platform management actions for superadmin (edit tenant, suspend access, reset initial admin, and controlled tenant support access)
+- [ ] T016 Add basic visual identity customization (platform logo/name and optional tenant branding fields for login, header, favicon, and emails)
