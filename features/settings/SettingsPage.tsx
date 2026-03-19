@@ -4,6 +4,9 @@ import { useSettingsController } from './hooks/useSettingsController';
 import { TagsManager } from './components/TagsManager';
 import { CustomFieldsManager } from './components/CustomFieldsManager';
 import { ApiKeysSection } from './components/ApiKeysSection';
+import { ClinicorpEventsSection } from './components/ClinicorpEventsSection';
+import { ClinicorpIntegrationSection } from './components/ClinicorpIntegrationSection';
+import { ClinicorpSyncOperationsSection } from './components/ClinicorpSyncOperationsSection';
 import { ChatwootEventsSection } from './components/ChatwootEventsSection';
 import { ChatwootIntegrationSection } from './components/ChatwootIntegrationSection';
 import { ChatwootLabelMappingsSection } from './components/ChatwootLabelMappingsSection';
@@ -104,13 +107,13 @@ const ProductsSettings: React.FC = () => {
 };
 
 const IntegrationsSettings: React.FC = () => {
-  type IntegrationsSubTab = 'chatwoot' | 'api' | 'webhooks' | 'mcp';
-  const [subTab, setSubTab] = useState<IntegrationsSubTab>('chatwoot');
+  type IntegrationsSubTab = 'clinicorp' | 'chatwoot' | 'api' | 'webhooks' | 'mcp';
+  const [subTab, setSubTab] = useState<IntegrationsSubTab>('clinicorp');
 
   useEffect(() => {
     const syncFromHash = () => {
       const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
-      if (h === 'chatwoot' || h === 'webhooks' || h === 'api' || h === 'mcp') {
+      if (h === 'clinicorp' || h === 'chatwoot' || h === 'webhooks' || h === 'api' || h === 'mcp') {
         setSubTab(h as IntegrationsSubTab);
       }
     };
@@ -136,6 +139,7 @@ const IntegrationsSettings: React.FC = () => {
     <div className="pb-10">
       <div className="flex items-center gap-2 mb-6">
         {([
+          { id: 'clinicorp' as const, label: 'Clinicorp' },
           { id: 'chatwoot' as const, label: 'Chatwoot' },
           { id: 'webhooks' as const, label: 'Webhooks' },
           { id: 'api' as const, label: 'API' },
@@ -159,6 +163,13 @@ const IntegrationsSettings: React.FC = () => {
         })}
       </div>
 
+      {subTab === 'clinicorp' && (
+        <>
+          <ClinicorpIntegrationSection />
+          <ClinicorpSyncOperationsSection />
+          <ClinicorpEventsSection />
+        </>
+      )}
       {subTab === 'chatwoot' && (
         <>
           <ChatwootIntegrationSection />

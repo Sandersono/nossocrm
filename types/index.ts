@@ -2,3 +2,4 @@
 export * from './types';
 export * from './ai';
 export * from './chatwoot';
+export * from './clinicorp';
